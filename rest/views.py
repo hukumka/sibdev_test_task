@@ -63,6 +63,8 @@ def process_deals(request):
         return Response(data={'Desc': 'Error handling csv file: `{}`'.format(e)}, status=status.HTTP_400_BAD_REQUEST)
     except UnicodeDecodeError:
         return Response(data={'Desc': 'Csv file must have UTF-8 encoding'}, status=status.HTTP_400_BAD_REQUEST)
+    except exceptions.ValidationError as e:
+        return Response(data={'Desc': e}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def processing_result(request):

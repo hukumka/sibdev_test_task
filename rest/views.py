@@ -47,6 +47,7 @@ def get_processing_result(request):
 @api_view(['POST'])
 def process_deals(request):
     try:
+        print(request.FILES)
         deals = request.FILES.get('deals')
         if deals is None:
             raise ValidationError("Request must contain csv file `deals`")
@@ -58,7 +59,7 @@ def process_deals(request):
             Deal.objects.bulk_create(deals_data)
         return Response(status=status.HTTP_200_OK)
     except ValidationError as e:
-        return Response(data={'Desc': e.data['detail']}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(data={'Desc': e.detail}, status=status.HTTP_400_BAD_REQUEST)
     except csv.Error as e:
         return Response(data={'Desc': 'Error handling csv file: `{}`'.format(e)}, status=status.HTTP_400_BAD_REQUEST)
     except UnicodeDecodeError:

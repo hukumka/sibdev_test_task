@@ -1,3 +1,4 @@
+import csv
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
@@ -6,11 +7,13 @@ from django.db import transaction
 from django.core import exceptions
 from django.db import models
 from django.utils import timezone
+from django.views.decorators.cache import cache_page
 from datetime import datetime
 from .models import Deal
-import csv
+from .cache_decorator import tagged_cache, invalidate_cache
 
 
+@tagged_cache('get_processing_result', 60 * 60)
 @api_view(['GET'])
 def get_processing_result(request):
     with transaction.atomic():
@@ -50,13 +53,14 @@ def process_deals(request):
         print(request.FILES)
         deals = request.FILES.get('deals')
         if deals is None:
-            raise ValidationError("Request must contain csv file `deals`")
+            raise ValidationError('Request must contain csv file `deals`')
 
         deals_csv = csv.reader(x.decode('UTF-8') for x in deals)
         deals_data = validate_csv(deals_csv)
         with transaction.atomic():
             Deal.objects.all().delete()
             Deal.objects.bulk_create(deals_data)
+        invalidate_cache('get_processing_result')
         return Response(status=status.HTTP_200_OK)
     except ValidationError as e:
         return Response(data={'Desc': e.detail}, status=status.HTTP_400_BAD_REQUEST)

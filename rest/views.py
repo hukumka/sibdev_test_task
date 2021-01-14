@@ -3,8 +3,10 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
 from django.db import transaction
+from django.core import exceptions
 from django.db import models
 from django.utils import timezone
+from datetime import datetime
 from .models import Deal
 import csv
 
@@ -73,7 +75,8 @@ def validate_csv(deal_iter):
     """
     def try_row_to_deal(deal_csv_row):
         customer, item, total, quantity, date = tuple(deal_csv_row)
-        return Deal(None, customer, item, total, quantity, timezone.make_aware(date))
+        date = timezone.make_aware(datetime.fromisoformat(date))
+        return Deal(None, customer, item, total, quantity, date)
 
     header = next(deal_iter)
     expected_header = ['customer', 'item', 'total', 'quantity', 'date']

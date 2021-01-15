@@ -1,4 +1,4 @@
 #!/bin/sh
 python manage.py makemigrations rest
 python manage.py migrate
-python -u manage.py runserver $1
+gunicorn sibdevrest.wsgi -b $1

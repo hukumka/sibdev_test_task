@@ -43,7 +43,7 @@ None
 
 #### Result
 
-```json
+```json5
 {
     [
         "username": "username" // Username of customer

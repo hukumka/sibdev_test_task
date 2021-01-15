@@ -80,17 +80,20 @@ def validate_csv(deal_iter):
     """
     Validate csv and return list of objects of type `Deal`
     """
-    def try_row_to_deal(deal_csv_row):
-        customer, item, total, quantity, date = tuple(deal_csv_row)
-        date = timezone.make_aware(datetime.fromisoformat(date))
+    def try_row_to_deal(i, deal_csv_row):
+        try:
+            customer, item, total, quantity, date = tuple(deal_csv_row)
+        except ValueError:
+            raise ValidationError('Error in line {}: wrong number of columns'.format(i))
+        try:
+            date = timezone.make_aware(datetime.fromisoformat(date))
+        except ValueError:
+            raise ValidationError('Error in line {}: wrong date format (must be iso8601)'.format(i))
         return Deal(None, customer, item, total, quantity, date)
 
     header = next(deal_iter)
     expected_header = ['customer', 'item', 'total', 'quantity', 'date']
     if header != expected_header:
         raise ValidationError('Must contain header `{}`'.format(', '.join(expected_header)))
-    try:
-        return [try_row_to_deal(x) for x in deal_iter]
-    except ValueError:
-        raise ValidationError('Must contain following columns: {}'.format(', '.join(expected_header)))
+    return [try_row_to_deal(i + 1, x) for i, x in enumerate(deal_iter)]
 

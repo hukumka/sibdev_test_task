@@ -86,6 +86,11 @@ def validate_csv(deal_iter):
         except ValueError:
             raise ValidationError('Error in line {}: wrong number of columns'.format(i))
         try:
+            total = int(total)
+            quantity = int(quantity)
+        except ValueError as e:
+            raise ValidationError('Error in line {}: {}'.format(i, e))
+        try:
             date = timezone.make_aware(datetime.fromisoformat(date))
         except ValueError:
             raise ValidationError('Error in line {}: wrong date format (must be iso8601)'.format(i))
@@ -95,5 +100,6 @@ def validate_csv(deal_iter):
     expected_header = ['customer', 'item', 'total', 'quantity', 'date']
     if header != expected_header:
         raise ValidationError('Must contain header `{}`'.format(', '.join(expected_header)))
-    return [try_row_to_deal(i + 1, x) for i, x in enumerate(deal_iter)]
+    # Line is offseted by 2: enumerate starts with 0 and we skipped header earlier
+    return [try_row_to_deal(i + 2, x) for i, x in enumerate(deal_iter)]
 
